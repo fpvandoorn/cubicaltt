@@ -1,0 +1,78 @@
+module moebius where
+
+import circle
+import int
+
+loopP : loopS1 = <i> loop{S1} @ i
+invLoop : loopS1 = <i> loopP @ -i
+
+triv : loopS1 = <i> base
+oneTurn (l : loopS1) : loopS1 = compS1 l loopP
+backTurn (l : loopS1) : loopS1 = compS1 l invLoop
+
+itLoopPlus1 : nat -> loopS1 = split
+ zero -> loopP
+ suc n -> oneTurn (itLoopPlus1 n)
+
+itLoop' : nat -> loopS1 = split
+ zero -> triv
+ suc n -> itLoopPlus1 n
+
+itLoop : nat -> loopS1 = split
+ zero -> triv
+ suc n -> oneTurn (itLoop n)
+
+itLoopNeg : nat -> loopS1 = split
+ zero -> invLoop
+ suc n -> backTurn (itLoopNeg n)
+
+loopIt : Z -> loopS1 = split
+ inl n -> itLoopNeg n
+ inr n -> itLoop' n
+
+loop2 : loopS1 = compS1 loopP loopP
+loop4 : loopS1 = compS1 loop2 loop2
+loop8 : loopS1 = compS1 loop4 loop4
+loop16 : loopS1 = compS1 loop8 loop8
+loop32 : loopS1 = compS1 loop16 loop16
+
+circle2moebius : S1 -> (y : S1) * moebius y = split
+  base -> (base, false)
+  loop @ i -> (loop2 @ i,
+    subst S1 moebius base (loop2 @ i) (<j> loop2 @ (i /\ j)) false)
+
+loopMoebius : U = Path ((y : S1) * moebius y) (base, false) (base, false)
+
+loopS12loopMoebius (l : loopS1) : loopMoebius =
+  <i> circle2moebius (l @ i)
+
+loopMoebiuspr1 (l : loopMoebius) : loopS1 =
+  <i> (l @ i).1
+
+f1 (n : Z) : Z =
+  winding (loopMoebiuspr1 (loopS12loopMoebius (loopIt n)))
+
+oneZ : Z = sucZ zeroZ
+twoZ : Z = sucZ oneZ
+threeZ : Z = sucZ twoZ
+fourZ : Z = sucZ threeZ
+fiveZ : Z = sucZ fourZ
+
+loopMoebius' : U = Path ((y : S1) * moebius y) (base, true) (base, true)
+
+loopS12loopMoebius' (l : loopS1) : loopMoebius' =
+  <i> comp (<j> (y : S1) * moebius y) (circle2moebius (l @ i))
+    [(i=0) -> <j> (loopP @ j, subst S1 moebius base (loopP @ j) (<k> loopP @ (j /\ k)) false),
+     (i=1) -> <j> (loopP @ j, subst S1 moebius base (loopP @ j) (<k> loopP @ (j /\ k)) false)]
+
+loopMoebiuspr1' (l : loopMoebius') : loopS1 =
+  <i> (l @ i).1
+
+f2 (n : Z) : Z =
+  winding (loopMoebiuspr1' (loopS12loopMoebius' (loopIt n)))
+
+f3 (n : Z) : loopMoebius =
+  (loopS12loopMoebius (loopIt n))
+
+f4 (l : loopS1) : Z =
+  winding (loopMoebiuspr1 (loopS12loopMoebius l))
