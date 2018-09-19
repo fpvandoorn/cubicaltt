@@ -35,6 +35,13 @@ loop4 : loopS1 = compS1 loop2 loop2
 loop8 : loopS1 = compS1 loop4 loop4
 loop16 : loopS1 = compS1 loop8 loop8
 loop32 : loopS1 = compS1 loop16 loop16
+loop64 : loopS1 = compS1 loop32 loop32
+loop128 : loopS1 = compS1 loop64 loop64
+loop256 : loopS1 = compS1 loop128 loop128
+loop512 : loopS1 = compS1 loop256 loop256
+loop1024 : loopS1 = compS1 loop512 loop512
+loop2048 : loopS1 = compS1 loop1024 loop1024
+loop4096 : loopS1 = compS1 loop2048 loop2048
 
 circle2moebius : S1 -> (y : S1) * moebius y = split
   base -> (base, false)
@@ -57,6 +64,7 @@ twoZ : Z = sucZ oneZ
 threeZ : Z = sucZ twoZ
 fourZ : Z = sucZ threeZ
 fiveZ : Z = sucZ fourZ
+sixZ : Z = sucZ fiveZ
 
 loopMoebius' : U = Path ((y : S1) * moebius y) (base, true) (base, true)
 
@@ -76,3 +84,21 @@ f3 (n : Z) : loopMoebius =
 
 f4 (l : loopS1) : Z =
   winding (loopMoebiuspr1 (loopS12loopMoebius l))
+
+f5 (l : loopS1) : Z =
+  winding (compS1 l l)
+
+f6 (l : loopS1) : Z =
+  winding (<i> circleelim S1 base loop2 (l @ i))
+
+-- tests
+
+test1 : Path Z (f1 oneZ) twoZ = <i> twoZ
+test2 : Path Z (f1 threeZ) sixZ = <i> sixZ
+test3 : Path Z (f1 (inr (n1))) (inr n2) = <i> inr n2
+test4 : Path Z (f1 (inr (n10))) (inr n20) = <i> inr n20
+test5 : Path Z (f1 (inr (n32))) (inr n64) = <i> inr n64
+test6 : Path Z (f1 (inr (n512))) (inr n1024) = <i> inr n1024
+test7 : Path Z (f4 loop2048) (inr n4096) = <i> inr n4096
+test8 : Path Z (f5 loop2048) (inr n4096) = <i> inr n4096
+test9 : Path Z (f6 loop2048) (inr n4096) = <i> inr n4096
