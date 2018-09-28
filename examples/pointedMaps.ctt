@@ -142,35 +142,48 @@ pentagon (A B C D : pType) :
   DADBC : pType = ppmap DA DBC
   DABDC : pType = ppmap DA BDC
   BDADC : pType = ppmap B DADC
-  bc  : U = pmap B C
-  ac  : U = pmap A C
+  dc  : U = pmap D C
+  da  : U = pmap D A
   abc : U = pmap A BC
+  dadc : U = pmap DA DC
   bdadc : U = pmap B DADC
   X : U = pmap ABC BDADC
   -- bac : U = pmap B AC
   -- BC0 : bc = pconst B C
+  DA0 : da = pconst D A
+  DC0 : dc = pconst D C
   ABC0 : abc = pconst A BC
   BDADC0 : bdadc = pconst B DADC
   s   : pmap ABC BAC = revPpmap A B C
+  sD  : pmap DBC BDC = revPpmap D B C
   s2  : pmap DABDC BDADC = revPpmap DA B DC
   -- si  : pmap BAC ABC = revPpmap B A C
   -- ss  : pmap ABC ABC = pcompose ABC BAC ABC si s
   -- p2  : Path (Path abc ABC0 ABC0) ss.2 (<_> ABC0) = compPathReflRefl abc ABC0
   BDarrow : pmap BAC BDADC = ppcompose B AC DADC (pppcompose D A C)
-  DAs : pmap DADBC DABDC = ppcompose DA DBC BDC (revPpmap D B C)
+  DAs : pmap DADBC DABDC = ppcompose DA DBC BDC sD
+  test11 (f : abc) (b : B.1) (g : da) : Path dc (pcompose D A C ((s.1 f).1 b) g)
+                                                ((sD.1 (pcompose D A BC f g)).1 b) =
+    <_> pcompose D A C ((s.1 f).1 b) g -- this shows that lhs1.1 = rhs1.1
   LHS : X = pcompose ABC BAC BDADC BDarrow s
   RHS : X = pcompose ABC DABDC BDADC s2 (pcompose ABC DADBC DABDC DAs (pppcompose D A BC))
-  lhs (f : abc) : bdadc = BDarrow.1 (s.1 f)
-  rhs (f : abc) : bdadc = s2.1 (DAs.1 ((pppcompose D A BC).1 f))
-
+  lhs (f : abc) : bdadc = pcompose B AC DADC (pppcompose D A C) (s.1 f)
+  rhs (f : abc) : bdadc = s2.1 (pcompose DA DBC BDC sD (ppcompose D A BC f))
+  lhs1 (f : abc) (b : B.1) : dadc = ppcompose D A C ((s.1 f).1 b)
+  rhs1 (f : abc) (b : B.1) : dadc = (s2.1 (pcompose DA DBC BDC sD (ppcompose D A BC f))).1 b
+  fn11 (f : abc) (b : B.1) (g : da) : dc = pcompose D A C ((s.1 f).1 b) g -- this is both lhs11 and rhs11
+  p111 (f : abc) (b : B.1) (g : da) : Path dc ((lhs1 f b).1 g) ((rhs1 f b).1 g) =
+    <_> fn11 f b g -- this is reflexivity
+  p112 (f : abc) (b : B.1) : Square dc (fn11 f b DA0) (fn11 f b DA0) DC0 DC0
+                                    (<_> fn11 f b DA0) (<_> DC0) (lhs1 f b).2 (rhs1 f b).2 =
+    undefined -- <i j> (\(d : D.1) -> (f.2 @ i).1 b, ?) --this might be wrong
+  p11 (f : abc) (b : B.1) : Path dadc (lhs1 f b) (rhs1 f b) =
+    pathPmap DA DC (lhs1 f b) (rhs1 f b) (p111 f b) (p112 f b)
   p1 (f : abc) : Path bdadc (lhs f) (rhs f) =
     undefined
   p2  : Square bdadc (lhs ABC0) (rhs ABC0) BDADC0 BDADC0 (p1 ABC0) (<_> BDADC0) LHS.2 RHS.2 =
     undefined
   p   : Path X LHS RHS = pathPmap ABC BDADC LHS RHS p1 p2
-
-  -- p2  : Path (Path abc ABC0 ABC0) ss.2 (<_> ABC0) = compPathReflRefl abc ABC0
-  -- p   : Path (pmap ABC ABC) ss (pid ABC) = pathPmap ABC ABC ss (pid ABC) (refl abc) p2
 
 -- pathPmap (A B : pType) (f g : pmap A B) (p : (a : A.1) -> Path B.1 (f.1 a) (g.1 a))
 --   (q : Square B.1 (f.1 A.2) (g.1 A.2) B.2 B.2 (p A.2) (<_> B.2) f.2 g.2) : Path (pmap A B) f g =
