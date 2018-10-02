@@ -99,6 +99,37 @@ test3 : Path Z (f1 (inr (n1))) (inr n2) = <i> inr n2
 test4 : Path Z (f1 (inr (n10))) (inr n20) = <i> inr n20
 test5 : Path Z (f1 (inr (n32))) (inr n64) = <i> inr n64
 test6 : Path Z (f1 (inr (n512))) (inr n1024) = <i> inr n1024
-test7 : Path Z (f4 loop2048) (inr n4096) = <i> inr n4096
-test8 : Path Z (f5 loop2048) (inr n4096) = <i> inr n4096
-test9 : Path Z (f6 loop2048) (inr n4096) = <i> inr n4096
+--test7 : Path Z (f4 loop2048) (inr n4096) = <i> inr n4096
+--test8 : Path Z (f5 loop2048) (inr n4096) = <i> inr n4096
+--test9 : Path Z (f6 loop2048) (inr n4096) = <i> inr n4096
+
+
+
+pathoverI1 (A0 A1 : U)        (P  : Path U  A0             A1)
+           (a0 : A0)(a1 : A1) (p1 : Path A1 (comp P a0 []) a1) :
+           PathP P a0 a1                                       =
+           <i> comp (<j> P@i) ((fill P a0 [])@i) 
+                             [(i=0) -> <j> a0 , (i=1) -> p1]
+
+moebius_constant_point (x : bool) : Path S1 
+  ((comp (<i> moebius (loop1@i) -> S1) (\(_ : bool) -> base) [ ]) x)
+  base = 
+  <i> fill (<_> S1) base [] @ -i
+        
+moebius_constant_funct : Path (bool->S1)
+  (comp (<i> moebius (loop1@i) -> S1) (\(_ : bool) -> base) [ ])
+  (\(_ : bool) -> base) = 
+  <i> \(x : bool) -> (moebius_constant_point x) @ i
+
+moebius2circle_constant_c : (x:S1) -> (moebius x) -> S1 = split
+  base -> (\(_ : bool) -> base)
+  loop@i -> pathoverI1 (bool->S1) (bool->S1) (<i> moebius (loop1 @ i) -> S1)
+     (\(_ : bool) -> base) (\(_ : bool) -> base) moebius_constant_funct @i
+
+moebius2circle_constant (u : (x:S1) * moebius x) : S1 =
+  moebius2circle_constant_c u.1 u.2
+
+test (l : loopS1) : Z =
+  winding (<i> moebius2circle_constant ( circle2moebius (l @ i)))
+-- loopN/ms: 4/1, 8/3, 16/7, 32/16,..., 1024/724, 4096/3325 approx linear 
+
